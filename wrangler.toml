@@ -1,0 +1,9 @@
+name = "esnscope"
+main = "src/index.ts"
+compatibility_date = "2026-10-01"
+
+[vars]
+# Replace this value with the OAuth client ID for the ESN Account project.
+ESNSCOPE_CLIENT_ID = "YOUR-CLIENT-ID"
+
+# Set locally with `wrangler secret put ESNSCOPE_CLIENT_SECRET`.

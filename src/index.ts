@@ -9,15 +9,11 @@
  * Put the ESN Account OAuth configuration here.
  *
  * IMPORTANT:
- * - Do not commit a real production CLIENT_SECRET to Git.
- * - For production, use a Cloudflare Worker secret instead.
+ * - Keep client credentials in Cloudflare Worker secrets.
  */
 
 // The only profile scope requested from ESN Account.
 const SCOPE = "oauth2_access_to_profile_information";
-
-// The callback URL registered for this OAuth client.
-const REDIRECT_URI = "https://esnscope.tools.esn.hu/oauth/callback";
 
 // ESN Account OAuth endpoints.
 const ENDPOINT_USERINFO = "https://accounts.esn.org/oauth/v1/userinfo";
@@ -98,8 +94,9 @@ interface RoleEntry {
 }
 
 interface Env {
-  ESNSCOPE_CLIENT_ID?: string;
-  ESNSCOPE_CLIENT_SECRET?: string;
+  ESNACCOUNT_CLIENT_ID?: string;
+  ESNACCOUNT_CLIENT_SECRET?: string;
+  ESNACCOUNT_WORKER_URL?: string;
 }
 
 interface OAuthRequestCookie {
@@ -124,7 +121,7 @@ export default {
     }
 
     if (url.pathname === "/oauth/authorize") {
-      return startAuthorization(env);
+      return startAuthorization(request, env);
     }
 
     if (url.pathname === "/oauth/callback") {
@@ -146,8 +143,9 @@ export default {
 // OAUTH
 // ---------------------------------------------------------------------------
 
-async function startAuthorization(env: Env): Promise<Response> {
-  const clientId = requireConfig(env.ESNSCOPE_CLIENT_ID, "ESNSCOPE_CLIENT_ID");
+async function startAuthorization(request: Request, env: Env): Promise<Response> {
+  const clientId = requireConfig(env.ESNACCOUNT_CLIENT_ID, "ESNACCOUNT_CLIENT_ID");
+  const redirectUri = getRedirectUri(request, env);
   const state = randomValue();
   const codeVerifier = randomValue(64);
   const codeChallenge = await createCodeChallenge(codeVerifier);
@@ -156,7 +154,7 @@ async function startAuthorization(env: Env): Promise<Response> {
 
   authorizationUrl.searchParams.set("response_type", "code");
   authorizationUrl.searchParams.set("client_id", clientId);
-  authorizationUrl.searchParams.set("redirect_uri", REDIRECT_URI);
+  authorizationUrl.searchParams.set("redirect_uri", redirectUri);
   authorizationUrl.searchParams.set("scope", SCOPE);
   authorizationUrl.searchParams.set("state", state);
   authorizationUrl.searchParams.set("code_challenge", codeChallenge);
@@ -206,18 +204,20 @@ async function handleCallback(
     );
   }
 
-  const clientId = requireConfig(env.ESNSCOPE_CLIENT_ID, "ESNSCOPE_CLIENT_ID");
+  const clientId = requireConfig(env.ESNACCOUNT_CLIENT_ID, "ESNACCOUNT_CLIENT_ID");
   const clientSecret = requireConfig(
-    env.ESNSCOPE_CLIENT_SECRET,
-    "ESNSCOPE_CLIENT_SECRET"
+    env.ESNACCOUNT_CLIENT_SECRET,
+    "ESNACCOUNT_CLIENT_SECRET"
   );
+  const redirectUri = getRedirectUri(request, env);
 
   try {
     const tokenResponse = await exchangeCodeForToken(
       code,
       clientId,
       clientSecret,
-      oauthCookie.codeVerifier
+      oauthCookie.codeVerifier,
+      redirectUri
     );
 
     if (!tokenResponse.access_token) {
@@ -249,13 +249,14 @@ async function exchangeCodeForToken(
   code: string,
   clientId: string,
   clientSecret: string,
-  codeVerifier: string
+  codeVerifier: string,
+  redirectUri: string
 ): Promise<TokenResponse> {
   const body = new URLSearchParams();
 
   body.set("grant_type", "authorization_code");
   body.set("code", code);
-  body.set("redirect_uri", REDIRECT_URI);
+  body.set("redirect_uri", redirectUri);
   body.set("client_id", clientId);
   body.set("client_secret", clientSecret);
   body.set("code_verifier", codeVerifier);
@@ -282,6 +283,13 @@ async function exchangeCodeForToken(
   } catch {
     throw new Error("Token endpoint returned invalid JSON.");
   }
+}
+
+function getRedirectUri(request: Request, env: Env): string {
+  const configuredWorkerUrl = env.ESNACCOUNT_WORKER_URL?.trim();
+  const workerUrl = configuredWorkerUrl || new URL(request.url).origin;
+
+  return `${workerUrl.replace(/\/+$/, "")}/oauth/callback`;
 }
 
 async function getUserInfo(accessToken: string): Promise<UserInfo> {

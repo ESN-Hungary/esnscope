@@ -12,14 +12,15 @@
     "enabled": true
   },
   "vars": {
-    // Replace this value with the OAuth client ID for the ESN Account project.
-    "ESNSCOPE_CLIENT_ID": "HU--TdBvpSsnSyJOzw"
+    // Leave empty to derive the Worker URL from each incoming request.
+    "ESNACCOUNT_WORKER_URL": ""
   },
   "secrets": {
     "required" : [
-    // Replace this value with the OAuth client secret for the ESN Account project.
-      "ESNSCOPE_CLIENT_SECRET"
+      "ESNACCOUNT_CLIENT_ID",
+      "ESNACCOUNT_CLIENT_SECRET"
       ]
   }
-  // Set locally with `wrangler secret put ESNSCOPE_CLIENT_SECRET`.
+  // Set with `wrangler secret put ESNACCOUNT_CLIENT_ID` and
+  // `wrangler secret put ESNACCOUNT_CLIENT_SECRET`.
 }

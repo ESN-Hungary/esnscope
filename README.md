@@ -14,25 +14,25 @@ It allows a user to:
 ## Configuration
 
 The requested scope is fixed to `oauth2_access_to_profile_information`. Configure the
-client ID as a Wrangler project variable in `wrangler.jsonc`:
+The Worker URL is optional. Leave `ESNACCOUNT_WORKER_URL` empty to derive it
+from the incoming request host:
 
-```toml
-[vars]
-ESNSCOPE_CLIENT_ID = "your-client-id"
+```jsonc
+"vars": {
+   "ESNACCOUNT_WORKER_URL": ""
+}
 ```
 
-### Important: client secret
+### Client credentials
 
-The client secret is read from the `ESNSCOPE_CLIENT_SECRET` Worker secret. Do **not**
-commit it to Git.
+Both client credentials are read from Worker secrets. Do **not** commit them to Git.
 
 For production, use a Cloudflare Worker secret:
 
 ```bash
-npx wrangler secret put ESNSCOPE_CLIENT_SECRET
+npx wrangler secret put ESNACCOUNT_CLIENT_ID
+npx wrangler secret put ESNACCOUNT_CLIENT_SECRET
 ```
-
-Then replace the `CLIENT_SECRET` constant with an environment binding.
 
 ## Install
 
@@ -52,16 +52,11 @@ The default local URL is usually:
 http://localhost:8787
 ```
 
-The deployed custom domain is:
+The OAuth provider must have the callback URI for the deployed Worker registered.
+It is generated dynamically as:
 
 ```text
-https://esnscope.tools.esn.hu
-```
-
-The OAuth provider must have this callback URI registered:
-
-```text
-https://esnscope.tools.esn.hu/oauth/callback
+<worker-origin>/oauth/callback
 ```
 
 ## Deploy

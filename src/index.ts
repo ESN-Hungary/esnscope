@@ -20,7 +20,7 @@ const SCOPE = "oauth2_access_to_profile_information";
 const REDIRECT_URI = "https://esnscope.tools.esn.hu/oauth/callback";
 
 // ESN Account OAuth endpoints.
-const ENDPOINT_USERINFO = "https://accounts.esn.org/oauth/userinfo";
+const ENDPOINT_USERINFO = "https://accounts.esn.org/oauth/v1/userinfo";
 const ENDPOINT_TOKEN = "https://accounts.esn.org/oauth/token";
 const ENDPOINT_AUTHORIZATION = "https://accounts.esn.org/oauth/authorize";
 
@@ -39,8 +39,62 @@ interface TokenResponse {
   [key: string]: unknown;
 }
 
+interface ESNUserAddress {
+  street_address?: string;
+  address_line1?: string;
+  address_line2?: string;
+  locality?: string;
+  postal_code?: string;
+  cc?: string;
+  country?: string;
+}
+
+interface ESNSocialMedia {
+  sm_ln?: string;
+  sm_ig?: string;
+  sm_tw?: string;
+  sm_fb?: string;
+}
+
+interface ESNDetailedRole {
+  role: string;
+  label: string;
+}
+
+interface ESNDetailedGroup {
+  label: string;
+  type: string;
+  scope: string;
+  roles: ESNDetailedRole[] | ESNDetailedRole;
+}
+
 interface UserInfo {
+  sub?: string;
+  name?: string;
+  given_name?: string;
+  family_name?: string;
+  email?: string;
+  email_verified?: boolean;
+  picture?: string;
+  esn_email?: string;
+  nickname?: string;
+  preferred_username?: string;
+  gender?: string;
+  birthdate?: string;
+  address?: ESNUserAddress;
+  other?: ESNSocialMedia;
+  updated_at?: number;
+  detailed_groups?: ESNDetailedGroup[];
+  groups?: Record<string, string>;
   [key: string]: unknown;
+}
+
+interface RoleEntry {
+  role: string;
+  label?: string;
+  source: "groups" | "detailed_groups";
+  group?: string;
+  scope?: string;
 }
 
 interface Env {
@@ -353,25 +407,61 @@ function timingSafeEqual(left: string, right: string): boolean {
 // ROLE EXPLORATION
 // ---------------------------------------------------------------------------
 
-function extractRoles(userInfo: UserInfo): unknown {
-  const possibleRoleKeys = [
-    "roles",
-    "role",
-    "realm_access",
-    "resource_access",
-    "permissions",
-    "groups"
-  ];
+function extractRoles(userInfo: UserInfo): RoleEntry[] {
+  const roles: RoleEntry[] = [];
 
-  const found: Record<string, unknown> = {};
+  for (const [groupId, role] of Object.entries(userInfo.groups ?? {})) {
+    roles.push({
+      role,
+      source: "groups",
+      group: groupId
+    });
+  }
 
-  for (const key of possibleRoleKeys) {
-    if (key in userInfo) {
-      found[key] = userInfo[key];
+  for (const group of userInfo.detailed_groups ?? []) {
+    const detailedRoles = Array.isArray(group.roles)
+      ? group.roles
+      : [group.roles];
+
+    for (const detailedRole of detailedRoles) {
+      roles.push({
+        role: detailedRole.role,
+        label: detailedRole.label,
+        source: "detailed_groups",
+        group: group.label,
+        scope: group.scope
+      });
     }
   }
 
-  return found;
+  return roles;
+}
+
+function renderRoleList(roles: RoleEntry[]): string {
+  if (roles.length === 0) {
+    return "<p>No roles were returned by the userinfo endpoint.</p>";
+  }
+
+  return `
+    <p>${roles.length} role${roles.length === 1 ? "" : "s"} found.</p>
+    <ul class="role-list">
+      ${roles.map((entry) => `
+        <li>
+          <strong>${escapeHtml(entry.label ?? entry.role)}</strong>
+          ${entry.label ? `<code>${escapeHtml(entry.role)}</code>` : ""}
+          <span>${escapeHtml(formatRoleSource(entry))}</span>
+        </li>
+      `).join("")}
+    </ul>
+  `;
+}
+
+function formatRoleSource(entry: RoleEntry): string {
+  if (entry.source === "groups") {
+    return `groups[${entry.group ?? ""}]`;
+  }
+
+  return [entry.group, entry.scope].filter(Boolean).join(" · ");
 }
 
 // ---------------------------------------------------------------------------
@@ -463,12 +553,16 @@ function explorerPage(data: {
         </section>
 
         <section class="card">
-          <h2>Roles & structure</h2>
+          <h2>All roles</h2>
           <p>
-            ESNscope looks for common role-related claims and displays them
-            separately so their structure can be inspected.
+            Roles are collected from both the flat <code>groups</code> claim and
+            the structured <code>detailed_groups</code> claim.
           </p>
-          <pre>${escapeHtml(JSON.stringify(roles, null, 2))}</pre>
+          ${renderRoleList(roles)}
+          <details>
+            <summary>Role data as JSON</summary>
+            <pre>${escapeHtml(JSON.stringify(roles, null, 2))}</pre>
+          </details>
         </section>
 
         <section class="card">
@@ -593,6 +687,28 @@ function page(title: string, body: string): string {
       border-radius: 8px;
       padding: 16px;
       line-height: 1.5;
+    }
+
+    .role-list {
+      display: grid;
+      gap: 10px;
+      padding: 0;
+      list-style: none;
+    }
+
+    .role-list li {
+      display: grid;
+      gap: 4px;
+      padding: 12px 14px;
+      background: #111827;
+      border: 1px solid #374151;
+      border-radius: 8px;
+    }
+
+    .role-list code,
+    .role-list span {
+      color: #9ca3af;
+      font-size: 14px;
     }
 
     code {

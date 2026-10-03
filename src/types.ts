@@ -39,6 +39,7 @@ export interface ESNDetailedGroup {
 
 export interface UserInfo {
   sub?: string;
+  sub_legacy?: string;
   name?: string;
   given_name?: string;
   family_name?: string;

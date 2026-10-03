@@ -96,7 +96,7 @@ interface RoleEntry {
 interface Env {
   ESNACCOUNT_CLIENT_ID?: string;
   ESNACCOUNT_CLIENT_SECRET?: string;
-  ESNACCOUNT_WORKER_URL?: string;
+  WORKER_URL?: string;
 }
 
 interface OAuthRequestCookie {
@@ -286,7 +286,7 @@ async function exchangeCodeForToken(
 }
 
 function getRedirectUri(request: Request, env: Env): string {
-  const configuredWorkerUrl = env.ESNACCOUNT_WORKER_URL?.trim();
+  const configuredWorkerUrl = env.WORKER_URL?.trim();
   const workerUrl = configuredWorkerUrl || new URL(request.url).origin;
 
   return `${workerUrl.replace(/\/+$/, "")}/oauth/callback`;

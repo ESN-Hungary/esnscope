@@ -13,7 +13,7 @@
   },
   "vars": {
     // Leave empty to derive the Worker URL from each incoming request.
-    "ESNACCOUNT_WORKER_URL": ""
+    "WORKER_URL": ""
   },
   "secrets": {
     "required" : [

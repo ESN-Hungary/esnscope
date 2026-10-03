@@ -14,12 +14,12 @@ It allows a user to:
 ## Configuration
 
 The requested scope is fixed to `oauth2_access_to_profile_information`. Configure the
-The Worker URL is optional. Leave `ESNACCOUNT_WORKER_URL` empty to derive it
+The Worker URL is optional. Leave `WORKER_URL` empty to derive it
 from the incoming request host:
 
 ```jsonc
 "vars": {
-   "ESNACCOUNT_WORKER_URL": ""
+   "WORKER_URL": ""
 }
 ```
 

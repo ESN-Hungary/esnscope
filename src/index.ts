@@ -17,12 +17,12 @@
 const SCOPE = "oauth2_access_to_profile_information";
 
 // The callback URL registered for this OAuth client.
-const REDIRECT_URI = "http://localhost:8787/oauth/callback";
+const REDIRECT_URI = "https://esnscope.tools.esn.hu/oauth/callback";
 
 // ESN Account OAuth endpoints.
-const ENDPOINT_USERINFO = "https://YOUR-ESN-ACCOUNT-HOST/oauth/userinfo";
-const ENDPOINT_TOKEN = "https://YOUR-ESN-ACCOUNT-HOST/oauth/token";
-const ENDPOINT_AUTHORIZATION = "https://YOUR-ESN-ACCOUNT-HOST/oauth/authorize";
+const ENDPOINT_USERINFO = "https://accounts.esn.org/oauth/userinfo";
+const ENDPOINT_TOKEN = "https://accounts.esn.org/oauth/token";
+const ENDPOINT_AUTHORIZATION = "https://accounts.esn.org/oauth/authorize";
 
 // OAuth client credentials.
 // ---------------------------------------------------------------------------

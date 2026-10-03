@@ -1,0 +1,25 @@
+{
+  "name": "esnscope",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-01",
+  "routes": [
+    {
+      "pattern": "esnscope.tools.esn.hu",
+      "custom_domain": true
+    }
+  ],
+  "observability": {
+    "enabled": true
+  },
+  "vars": {
+    // Replace this value with the OAuth client ID for the ESN Account project.
+    "ESNSCOPE_CLIENT_ID": "HU--TdBvpSsnSyJOzw"
+  },
+  "secrets": {
+    "required" : [
+    // Replace this value with the OAuth client secret for the ESN Account project.
+      "ESNSCOPE_CLIENT_SECRET"
+      ]
+  }
+  // Set locally with `wrangler secret put ESNSCOPE_CLIENT_SECRET`.
+}

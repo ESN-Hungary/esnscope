@@ -14,7 +14,7 @@ It allows a user to:
 ## Configuration
 
 The requested scope is fixed to `oauth2_access_to_profile_information`. Configure the
-client ID as a Wrangler project variable in `wrangler.toml`:
+client ID as a Wrangler project variable in `wrangler.jsonc`:
 
 ```toml
 [vars]
@@ -52,10 +52,16 @@ The default local URL is usually:
 http://localhost:8787
 ```
 
-The OAuth provider must have the corresponding callback URI registered, for example:
+The deployed custom domain is:
 
 ```text
-http://localhost:8787/oauth/callback
+https://esnscope.tools.esn.hu
+```
+
+The OAuth provider must have this callback URI registered:
+
+```text
+https://esnscope.tools.esn.hu/oauth/callback
 ```
 
 ## Deploy

@@ -19,7 +19,7 @@ Before writing code, provide these inputs:
 | `worker_url` | Optional | Canonical public origin, for example `https://app.example.org`; if empty, derive it from the incoming request |
 | `authorization_endpoint` | Yes | `https://accounts.esn.org/oauth/authorize` |
 | `token_endpoint` | Yes | `https://accounts.esn.org/oauth/token` |
-| `userinfo_endpoint` | Yes | `https://accounts.esn.org/oauth/v1/userinfo` |
+| `userinfo_endpoint` | Yes | `https://accounts.esn.org/oauth/v2/userinfo` |
 | `scope` | Yes | `oauth2_access_to_profile_information` |
 | `redirect_path` | Yes | `/oauth/callback` |
 
@@ -128,7 +128,7 @@ Required error behavior:
 ### 2.3 Userinfo endpoint
 
 ```text
-GET https://accounts.esn.org/oauth/v1/userinfo
+GET https://accounts.esn.org/oauth/v2/userinfo
 Authorization: Bearer ACCESS_TOKEN
 Accept: application/json
 ```
@@ -478,7 +478,7 @@ function handleCallback(request): response
         return serverError("Token response has no access_token")
 
     userInfo = GET_JSON(
-        "https://accounts.esn.org/oauth/v1/userinfo",
+        "https://accounts.esn.org/oauth/v2/userinfo",
         headers = { Authorization: "Bearer " + tokens.access_token }
     )
 
